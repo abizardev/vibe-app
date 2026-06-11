@@ -11,6 +11,26 @@ import {
   deleteFile,
 } from "../services/supabase.js";
 
+
+// Auto cleanup temp files setiap request (check jika > 1 jam)
+async function autoCleanupTemp() {
+  try {
+    const { listFiles, deleteFile } = await import("../services/supabase.js");
+    const cutoffTime = Date.now() - (60 * 60 * 1000); // 1 jam
+    const files = await listFiles("videos", "temp");
+    const toDelete = files.filter((f) => new Date(f.created_at).getTime() < cutoffTime);
+    if (toDelete.length > 0) {
+      console.log(`[Cleanup] Deleting ${toDelete.length} temp files older than 1 hour`);
+      await Promise.all(toDelete.map((f) => deleteFile("videos", `temp/${f.name}`).catch(() => {})));
+    }
+  } catch (err) {
+    console.error("[Cleanup Error]", err.message);
+  }
+}
+
+// Jalankan cleanup di background setiap ada request
+setInterval(() => autoCleanupTemp().catch(() => {}), 5 * 60 * 1000); // Setiap 5 menit
+
 const router = Router();
 
 const uploadImage = multer({
