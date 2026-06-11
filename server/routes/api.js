@@ -98,8 +98,8 @@ router.post("/video/sign", async (req, res) => {
     const ext = filename.split(".").pop()?.toLowerCase() || "mp4";
     const id = crypto.randomBytes(12).toString("hex");
     const supabasePath = `temp/${id}_${Date.now()}.${ext}`;
-    const SUPABASE_URL = "https://miwhnljvdcusanmqfbhi.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pd2hubGp2ZGN1c2FubXFmYmhpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTE1NDk0OCwiZXhwIjoyMDk2NzMwOTQ4fQ.VgduPDINbcVmcDfSAWA1Ns53sXqOBZzJheeC3qxOAJE";
+    const SUPABASE_URL = "https://tklrhrwcivprtebhnrde.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbHJocndjaXZwcnRlYmhucmRlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzg5NDE5OCwiZXhwIjoyMDkzNDcwMTk4fQ._55geOiWRnZILSkRhUdNLS43P5fIWoZ7WdGYE6SSND4";
 
     return res.json({
       Status: true,
@@ -232,8 +232,8 @@ router.post("/storage/upload-url", async (req, res) => {
     const id = crypto.randomBytes(12).toString("hex");
     const filePath = `temp/${id}_${Date.now()}.${ext}`;
     const bucket = "videos";
-    const uploadUrl = `https://miwhnljvdcusanmqfbhi.supabase.co/storage/v1/object/${bucket}/${filePath}`;
-    const publicUrl = `https://miwhnljvdcusanmqfbhi.supabase.co/storage/v1/object/public/${bucket}/${filePath}`;
+    const uploadUrl = `https://tklrhrwcivprtebhnrde.supabase.co/storage/v1/object/${bucket}/${filePath}`;
+    const publicUrl = `https://tklrhrwcivprtebhnrde.supabase.co/storage/v1/object/public/${bucket}/${filePath}`;
     return res.json({ Status: true, uploadUrl, publicUrl, path: filePath, bucket });
   } catch (error) {
     console.error("[Upload URL Error]", error.message);
@@ -299,7 +299,7 @@ router.get("/image/results", async (req, res) => {
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 100)
       .map((f) => ({
-        url: `https://miwhnljvdcusanmqfbhi.supabase.co/storage/v1/object/public/images/results/${f.name}`,
+        url: `https://tklrhrwcivprtebhnrde.supabase.co/storage/v1/object/public/images/results/${f.name}`,
         storage_path: `results/${f.name}`,
         storage_bucket: "images",
         created_at: f.created_at,

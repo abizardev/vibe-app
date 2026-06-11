@@ -4,4 +4,3 @@ dist/
 *.zip
 .env
 .env.local
-.vercel
