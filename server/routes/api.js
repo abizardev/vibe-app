@@ -140,11 +140,11 @@ router.post("/video/transfer", async (req, res) => {
     const fname = filename || "video.mp4";
 
     const parts = [];
-    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="token"\r\n\r\n${token}`);
+    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fname}"\r\nContent-Type: ${mime}\r\n\r\n`);
+    parts.push(videoBuffer);
+    parts.push(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="token"\r\n\r\n${token}`);
     parts.push(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="key"\r\n\r\n${key}`);
     parts.push(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="fname"\r\n\r\n${fname}`);
-    parts.push(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fname}"\r\nContent-Type: ${mime}\r\n\r\n`);
-    parts.push(videoBuffer);
     parts.push(`\r\n--${boundary}--\r\n`);
 
     const buffers = parts.map((p) => (typeof p === "string" ? Buffer.from(p) : p));
