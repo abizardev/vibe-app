@@ -15,12 +15,12 @@ const router = Router();
 
 const uploadImage = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 4.5 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 },
 });
 
 const uploadVideo = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 4.5 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 },
 });
 
 // Sliding window rate limit: max 1 req per 1.1s

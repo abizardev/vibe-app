@@ -7,8 +7,8 @@ app.use(cors({
   origin: true,
   credentials: true,
 }));
-app.use(express.json({ limit: "4.5mb" }));
-app.use(express.urlencoded({ extended: true, limit: "4.5mb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", runtime: "vercel", time: new Date().toISOString() });
