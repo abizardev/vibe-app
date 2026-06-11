@@ -331,19 +331,22 @@ export async function pollProgress(sessionData) {
     }
 
     // Check for result URL
+    console.log("[Wink] Item from query_batch:", JSON.stringify(item, null, 2));
     const media = item?.result?.media_info_list?.[0];
-    const url = media?.media_data || item?.result?.result_url || item?.result?.url || "";
+    const url = media?.media_data || item?.result?.result_url || item?.result?.url || item?.result?.result || "";
     const errorCode = item?.result?.error_code;
     const errorMsg = item?.result?.error_msg;
+    console.log("[Wink] Extracted - URL:", url, "ErrorCode:", errorCode);
 
     if (url && url.startsWith("http") && errorCode === 0) {
+      console.log("[Wink] SUCCESS! Result URL found:", url);
       return { done: true, resultUrl: url };
     }
     if (errorCode && errorCode !== 29901 && errorCode !== 0) {
       throw new Error(`task gagal: ${errorCode} ${errorMsg || ""}`);
     }
 
-    return { done: false, phase: "result", msgId, cookies: cookies.toJSON() };
+    return { done: false, phase: "result", msgId, cookies: cookies.toJSON(), _debug_item: item };
   }
 
   throw new Error("Unknown phase: " + phase);
