@@ -306,22 +306,28 @@ export async function pollProgress(sessionData) {
     console.log("[Wink Query Batch Response]", JSON.stringify(data, null, 2));
     const item = data?.item_list?.[0];
 
-    // Check for msg_id redirect - ONLY if current msgId doesn't have wpr_ prefix
+    // Check for msg_id redirect
     const resultValue = item?.result?.result || "";
     const realMsgId = item?.result?.msg_id || item?.msg_id || "";
     let nextMsgId = "";
     
-    // Prioritaskan msgId dengan prefix wpr_ (yang valid)
-    if (realMsgId && realMsgId.startsWith("wpr_") && realMsgId !== msgId) {
-      nextMsgId = realMsgId;
-      console.log("[Wink] Using wpr_ msgId:", nextMsgId);
-    } else if (resultValue && resultValue !== msgId && !resultValue.startsWith("http")) {
-      nextMsgId = resultValue;
-      console.log("[Wink] Using result value as msgId:", nextMsgId);
-    }
-
-    if (nextMsgId) {
-      return { done: false, phase: "result", msgId: nextMsgId, cookies: cookies.toJSON(), error10108Count: 0 };
+    // IMPORTANT: Jika msgId saat ini sudah wpr_, JANGAN redirect ke msgId lain!
+    if (msgId.startsWith("wpr_")) {
+      console.log("[Wink] Sticking with wpr_ msgId:", msgId);
+      // Tidak redirect, tetap gunakan msgId yang sama
+    } else {
+      // Prioritaskan msgId dengan prefix wpr_ (yang valid)
+      if (realMsgId && realMsgId.startsWith("wpr_") && realMsgId !== msgId) {
+        nextMsgId = realMsgId;
+        console.log("[Wink] Redirecting to wpr_ msgId:", nextMsgId);
+      } else if (resultValue && resultValue !== msgId && !resultValue.startsWith("http")) {
+        nextMsgId = resultValue;
+        console.log("[Wink] Redirecting to result value msgId:", nextMsgId);
+      }
+      
+      if (nextMsgId) {
+        return { done: false, phase: "result", msgId: nextMsgId, cookies: cookies.toJSON(), error10108Count: 0 };
+      }
     }
 
     // Check for result URL
