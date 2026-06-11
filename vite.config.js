@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://abizarrr19-flow-backend.hf.space',
+        target: '/api',
         changeOrigin: true,
       },
     },
