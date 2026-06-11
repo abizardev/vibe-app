@@ -228,7 +228,7 @@ export async function pollProgress(sessionData) {
 
     if (!videoTranscoded) {
       console.log("[Wink] videoTranscoded not found, still transcoding...");
-      return { done: false, phase: "transcode", cookies: cookies.toJSON() };
+      return { done: false, phase: "transcode", cookies: cookies.toJSON(), _debug_transcode_data: data };
     }
     console.log("[Wink] videoTranscoded found:", videoTranscoded);
 
