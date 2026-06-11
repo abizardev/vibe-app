@@ -231,6 +231,10 @@ router.post("/video/poll", async (req, res) => {
       Status: true,
       done: false,
       session: { ...session, ...result, done: undefined, resultUrl: undefined },
+      _debug: result._debug_error || result._debug_transcode_data ? {
+        error: result._debug_error,
+        data: result._debug_transcode_data
+      } : undefined
     });
   } catch (error) {
     console.error("[Video Poll Error]", error.message);

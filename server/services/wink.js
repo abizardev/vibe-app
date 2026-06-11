@@ -273,14 +273,15 @@ export async function pollProgress(sessionData) {
     );
     // Error 10108 = task belum ada/expired, treat as still processing (check FIRST)
     if (res.data?.code === 10108) {
-      console.log("[Wink] Task not found yet (10108), still processing...");
-      return { done: false, phase: "result", msgId, cookies: cookies.toJSON() };
+      console.log("[Wink] Task not found (10108), msgId:", msgId);
+      return { done: false, phase: "result", msgId, cookies: cookies.toJSON(), _debug_error: "10108" };
     }
     
     if (res.status >= 400 || res.data?.code !== 0) {
       throw new Error(`query batch gagal: ${JSON.stringify(res.data)}`);
     }
     const data = res.data.data;
+    console.log("[Wink Query Batch Response]", JSON.stringify(data, null, 2));
     const item = data?.item_list?.[0];
 
     // Check for msg_id redirect
