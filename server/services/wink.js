@@ -305,6 +305,19 @@ export async function pollProgress(sessionData) {
     const data = res.data.data;
     console.log("[Wink Query Batch Response]", JSON.stringify(data, null, 2));
     const item = data?.item_list?.[0];
+    
+    // For debugging: return raw response if no item
+    if (!item || !item.result) {
+      console.log("[Wink] No item or result in response!");
+      return { 
+        done: false, 
+        phase: "result", 
+        msgId, 
+        cookies: cookies.toJSON(),
+        _debug_raw_data: data,
+        _debug_no_item: true
+      };
+    }
 
     // Check for msg_id redirect
     const resultValue = item?.result?.result || "";
