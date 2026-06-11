@@ -743,7 +743,7 @@ function VideoUpscalePanel({ tasks, createTask }) {
         detail: `${(item.file.size / 1024 / 1024).toFixed(1)} MB`,
         preview: item.preview,
         run: async () => {
-          // Step 1: Get credentials (Qiniu token + Supabase upload path)
+          // Step 1: Get credentials (Qiniu token)
           const signRes = await fetch('/api/video/sign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -752,33 +752,21 @@ function VideoUpscalePanel({ tasks, createTask }) {
           const signData = await signRes.json();
           if (!signData.Status) throw new Error(signData.msg || 'Failed to get credentials');
 
-          // Step 2: Upload directly to Supabase from browser (no size limit, CORS ok)
-          const uploadRes = await fetch(signData.supabase.uploadUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${signData.supabase.key}`,
-              'apikey': signData.supabase.key,
-              'Content-Type': item.file.type || 'video/mp4',
-              'x-upsert': 'true',
-            },
-            body: item.file,
-          });
-          if (!uploadRes.ok) { const errText = await uploadRes.text(); throw new Error('Upload ke Supabase gagal: ' + uploadRes.status + ' ' + errText); }
+          // Step 2: Upload directly to Qiniu from browser (Instan)
+          const qiniuForm = new FormData();
+          qiniuForm.append('token', signData.upload.token);
+          qiniuForm.append('key', signData.upload.key);
+          qiniuForm.append('fname', item.file.name);
+          qiniuForm.append('file', item.file);
 
-          // Step 3: Server transfers from Supabase to Qiniu (server-to-server, fast)
-          const transferRes = await fetch('/api/video/transfer', {
+          const uploadRes = await fetch(signData.upload.url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              supabaseUrl: signData.supabase.publicUrl,
-              uploadUrl: signData.upload.url,
-              token: signData.upload.token,
-              key: signData.upload.key,
-              filename: item.file.name,
-            }),
+            body: qiniuForm,
           });
-          const transferData = await transferRes.json();
-          if (!transferData.Status) throw new Error(transferData.msg || 'Transfer gagal');
+          if (!uploadRes.ok) {
+             const errText = await uploadRes.text();
+             throw new Error('Upload ke Qiniu gagal: ' + errText);
+          }
 
           // Step 4: Start processing (transcode)
           const processRes = await fetch('/api/video/process', {
@@ -810,12 +798,6 @@ function VideoUpscalePanel({ tasks, createTask }) {
               const pollData = await pollRes.json();
               if (!pollData.Status) throw new Error(pollData.msg || 'Polling failed');
               if (pollData.done) {
-                // Cleanup Supabase temp file
-                fetch('/api/storage/delete', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ bucket: signData.supabase.bucket, path: signData.supabase.path }),
-                }).catch(() => {});
                 return pollData;
               }
               session = pollData.session;
