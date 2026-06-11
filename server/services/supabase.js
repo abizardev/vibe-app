@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 
-const SUPABASE_URL = "https://tklrhrwcivprtebhnrde.supabase.co";
-const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbHJocndjaXZwcnRlYmhucmRlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzg5NDE5OCwiZXhwIjoyMDkzNDcwMTk4fQ._55geOiWRnZILSkRhUdNLS43P5fIWoZ7WdGYE6SSND4";
+const SUPABASE_URL = "https://miwhnljvdcusanmqfbhi.supabase.co";
+const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pd2hubGp2ZGN1c2FubXFmYmhpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTE1NDk0OCwiZXhwIjoyMDk2NzMwOTQ4fQ.VgduPDINbcVmcDfSAWA1Ns53sXqOBZzJheeC3qxOAJE";
 
 const BUCKET_IMAGES = "images";
 const BUCKET_VIDEOS = "videos";
