@@ -223,11 +223,14 @@ export async function pollProgress(sessionData) {
       throw new Error(`transcode query gagal: ${JSON.stringify(res.data)}`);
     }
     const data = res.data.data;
+    console.log("[Wink Transcode Query Response]", JSON.stringify(data, null, 2));
     const videoTranscoded = data?.video_transcoded || data?.transcoded_video || data?.transcoded_url || data?.video_url || "";
 
     if (!videoTranscoded) {
+      console.log("[Wink] videoTranscoded not found, still transcoding...");
       return { done: false, phase: "transcode", cookies: cookies.toJSON() };
     }
+    console.log("[Wink] videoTranscoded found:", videoTranscoded);
 
     // Transcode done → start delivery
     const video = data?.video || data?.url || data?.source_url || sourceUrl || "";
