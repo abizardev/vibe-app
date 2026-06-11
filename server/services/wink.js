@@ -224,7 +224,7 @@ export async function pollProgress(sessionData) {
     }
     const data = res.data.data;
     console.log("[Wink Transcode Query Response]", JSON.stringify(data, null, 2));
-    const videoTranscoded = data?.video_transcoded || data?.transcoded_video || data?.transcoded_url || data?.video_url || "";
+    const videoTranscoded = data?.video_transcoded || data?.transcoded_video || data?.transcoded_url || data?.video_url || data?.video || "";
 
     if (!videoTranscoded) {
       console.log("[Wink] videoTranscoded not found, still transcoding...");
