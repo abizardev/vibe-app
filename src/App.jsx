@@ -763,7 +763,7 @@ function VideoUpscalePanel({ tasks, createTask }) {
             },
             body: item.file,
           });
-          if (!uploadRes.ok) throw new Error('Upload ke Supabase gagal');
+          if (!uploadRes.ok) { const errText = await uploadRes.text(); throw new Error('Upload ke Supabase gagal: ' + uploadRes.status + ' ' + errText); }
 
           // Step 3: Server transfers from Supabase to Qiniu (server-to-server, fast)
           const transferRes = await fetch('/api/video/transfer', {
