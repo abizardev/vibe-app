@@ -271,10 +271,32 @@ export async function pollProgress(sessionData) {
       `${BASE_URL}/api/meitu_ai/query_batch.json?${params.toString()}`,
       { ...traceHeaders(), referer: `${BASE_URL}/video-enhancer/upload` }
     );
-    // Error 10108 = task belum ada/expired, treat as still processing (check FIRST)
+    // Error 10108 = task belum ada/expired
     if (res.data?.code === 10108) {
-      console.log("[Wink] Task not found (10108), msgId:", msgId);
-      return { done: false, phase: "result", msgId, cookies: cookies.toJSON(), _debug_error: "10108" };
+      const retryCount = (sessionData.error10108Count || 0) + 1;
+      console.log(`[Wink] Task not found (10108), msgId: ${msgId}, retry: ${retryCount}`);
+      
+      // Jika error 10108 terlalu banyak (>5x), mungkin msgId salah, skip redirect logic
+      if (retryCount > 5) {
+        console.log("[Wink] Too many 10108 errors, waiting longer...");
+        return { 
+          done: false, 
+          phase: "result", 
+          msgId, 
+          cookies: cookies.toJSON(), 
+          error10108Count: retryCount,
+          _debug_error: "10108_retry_" + retryCount 
+        };
+      }
+      
+      return { 
+        done: false, 
+        phase: "result", 
+        msgId, 
+        cookies: cookies.toJSON(), 
+        error10108Count: retryCount,
+        _debug_error: "10108" 
+      };
     }
     
     if (res.status >= 400 || res.data?.code !== 0) {
@@ -284,15 +306,22 @@ export async function pollProgress(sessionData) {
     console.log("[Wink Query Batch Response]", JSON.stringify(data, null, 2));
     const item = data?.item_list?.[0];
 
-    // Check for msg_id redirect
+    // Check for msg_id redirect - ONLY if current msgId doesn't have wpr_ prefix
     const resultValue = item?.result?.result || "";
     const realMsgId = item?.result?.msg_id || item?.msg_id || "";
     let nextMsgId = "";
-    if (resultValue && resultValue !== msgId && !resultValue.startsWith("http")) nextMsgId = resultValue;
-    else if (realMsgId && realMsgId !== msgId && !realMsgId.startsWith("wpr_")) nextMsgId = realMsgId;
+    
+    // Prioritaskan msgId dengan prefix wpr_ (yang valid)
+    if (realMsgId && realMsgId.startsWith("wpr_") && realMsgId !== msgId) {
+      nextMsgId = realMsgId;
+      console.log("[Wink] Using wpr_ msgId:", nextMsgId);
+    } else if (resultValue && resultValue !== msgId && !resultValue.startsWith("http")) {
+      nextMsgId = resultValue;
+      console.log("[Wink] Using result value as msgId:", nextMsgId);
+    }
 
     if (nextMsgId) {
-      return { done: false, phase: "result", msgId: nextMsgId, cookies: cookies.toJSON() };
+      return { done: false, phase: "result", msgId: nextMsgId, cookies: cookies.toJSON(), error10108Count: 0 };
     }
 
     // Check for result URL
