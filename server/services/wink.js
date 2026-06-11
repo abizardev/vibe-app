@@ -319,28 +319,24 @@ export async function pollProgress(sessionData) {
       };
     }
 
-    // Check for msg_id redirect
+    // Check for msg_id redirect - ALWAYS follow result.result if it's a new msgId
     const resultValue = item?.result?.result || "";
     const realMsgId = item?.result?.msg_id || item?.msg_id || "";
     let nextMsgId = "";
     
-    // Check result.result first (might be next msgId to poll)
+    // Priority 1: result.result (final result msgId)
     if (resultValue && resultValue !== msgId && !resultValue.startsWith("http")) {
       nextMsgId = resultValue;
-      console.log("[Wink] Redirecting to result msgId:", nextMsgId);
-    } else if (!msgId.startsWith("wpr_")) {
-      // Prioritaskan msgId dengan prefix wpr_ (yang valid)
-      if (realMsgId && realMsgId.startsWith("wpr_") && realMsgId !== msgId) {
-        nextMsgId = realMsgId;
-        console.log("[Wink] Redirecting to wpr_ msgId:", nextMsgId);
-      } else if (resultValue && resultValue !== msgId && !resultValue.startsWith("http")) {
-        nextMsgId = resultValue;
-        console.log("[Wink] Redirecting to result value msgId:", nextMsgId);
-      }
-      
-      if (nextMsgId) {
-        return { done: false, phase: "result", msgId: nextMsgId, cookies: cookies.toJSON(), error10108Count: 0 };
-      }
+      console.log("[Wink] Following result.result redirect:", nextMsgId);
+    }
+    // Priority 2: wpr_ msgId (from realMsgId)
+    else if (realMsgId && realMsgId.startsWith("wpr_") && realMsgId !== msgId) {
+      nextMsgId = realMsgId;
+      console.log("[Wink] Following wpr_ msgId:", nextMsgId);
+    }
+    
+    if (nextMsgId) {
+      return { done: false, phase: "result", msgId: nextMsgId, cookies: cookies.toJSON(), error10108Count: 0 };
     }
 
     // Check for result URL
