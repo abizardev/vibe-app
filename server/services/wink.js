@@ -271,13 +271,14 @@ export async function pollProgress(sessionData) {
       `${BASE_URL}/api/meitu_ai/query_batch.json?${params.toString()}`,
       { ...traceHeaders(), referer: `${BASE_URL}/video-enhancer/upload` }
     );
-    if (res.status >= 400 || (res.data?.code !== 0 && res.data?.code !== 10108)) {
-      throw new Error(`query batch gagal: ${JSON.stringify(res.data)}`);
-    }
-    // Error 10108 = task belum ada/expired, treat as still processing
+    // Error 10108 = task belum ada/expired, treat as still processing (check FIRST)
     if (res.data?.code === 10108) {
       console.log("[Wink] Task not found yet (10108), still processing...");
       return { done: false, phase: "result", msgId, cookies: cookies.toJSON() };
+    }
+    
+    if (res.status >= 400 || res.data?.code !== 0) {
+      throw new Error(`query batch gagal: ${JSON.stringify(res.data)}`);
     }
     const data = res.data.data;
     const item = data?.item_list?.[0];
