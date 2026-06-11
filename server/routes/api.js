@@ -118,31 +118,33 @@ router.post("/video/sign", async (req, res) => {
   }
 });
 
-// Upload directly from client to Vercel, then stream to Qiniu
-router.post("/video/upload", uploadVideo.single("video"), async (req, res) => {
+// Transfer: download from Supabase, upload to Qiniu (server-to-server, fast)
+router.post("/video/transfer", async (req, res) => {
   try {
-    const { uploadUrl, token, key, filename } = req.body;
-    const file = req.file;
+    const { supabaseUrl, uploadUrl, token, key, filename } = req.body;
+    if (!supabaseUrl || !uploadUrl || !token || !key) {
+      return res.status(400).json({ Status: false, msg: "supabaseUrl, uploadUrl, token, key required" });
+    }
 
-    if (!file) return res.status(400).json({ Status: false, msg: "Video file is required" });
-    if (!uploadUrl || !token || !key) return res.status(400).json({ Status: false, msg: "uploadUrl, token, key required" });
+    // Download from Supabase (server-to-server, fast)
+    const dlRes = await fetch(supabaseUrl);
+    if (!dlRes.ok) throw new Error(`Download from Supabase failed: ${dlRes.status}`);
+    const videoBuffer = Buffer.from(await dlRes.arrayBuffer());
 
+    // Upload to Qiniu
     const crypto = await import("node:crypto");
     const boundary = `----FormBoundary${crypto.randomBytes(8).toString("hex")}`;
-    
-    // Wajib set MIME type sebagai video asli agar Qiniu (Meitu) mau terima
-    const ext = (filename || file.originalname || "video.mp4").split(".").pop()?.toLowerCase() || "mp4";
-    let mime = "video/mp4";
-    if (ext === "mov") mime = "video/quicktime";
-    if (ext === "webm") mime = "video/webm";
-    const fname = filename || file.originalname || "video.mp4";
+    const ext = (filename || "video.mp4").split(".").pop()?.toLowerCase() || "mp4";
+    const mimeMap = { mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm" };
+    const mime = mimeMap[ext] || "video/mp4";
+    const fname = filename || "video.mp4";
 
     const parts = [];
     parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="token"\r\n\r\n${token}`);
     parts.push(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="key"\r\n\r\n${key}`);
     parts.push(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="fname"\r\n\r\n${fname}`);
     parts.push(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fname}"\r\nContent-Type: ${mime}\r\n\r\n`);
-    parts.push(file.buffer);
+    parts.push(videoBuffer);
     parts.push(`\r\n--${boundary}--\r\n`);
 
     const buffers = parts.map((p) => (typeof p === "string" ? Buffer.from(p) : p));
@@ -159,20 +161,12 @@ router.post("/video/upload", uploadVideo.single("video"), async (req, res) => {
       body,
     });
 
-    // Mengambil response text jika json gagal
-    let qData;
-    const qText = await qRes.text();
-    try {
-        qData = JSON.parse(qText);
-    } catch(e) {
-        throw new Error(`Qiniu responded with non-JSON: ${qText}`);
-    }
-
-    if (!qRes.ok) throw new Error(`Qiniu upload failed: ${qRes.status} ${qText}`);
+    const qData = await qRes.json();
+    if (!qRes.ok) throw new Error(`Qiniu upload failed: ${JSON.stringify(qData)}`);
 
     return res.json({ Status: true, data: qData });
   } catch (error) {
-    console.error("[Video Upload to Qiniu Error]", error.message);
+    console.error("[Video Transfer Error]", error.message);
     return res.status(500).json({ Status: false, msg: error.message });
   }
 });
