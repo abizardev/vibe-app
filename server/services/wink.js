@@ -324,11 +324,11 @@ export async function pollProgress(sessionData) {
     const realMsgId = item?.result?.msg_id || item?.msg_id || "";
     let nextMsgId = "";
     
-    // IMPORTANT: Jika msgId saat ini sudah wpr_, JANGAN redirect ke msgId lain!
-    if (msgId.startsWith("wpr_")) {
-      console.log("[Wink] Sticking with wpr_ msgId:", msgId);
-      // Tidak redirect, tetap gunakan msgId yang sama
-    } else {
+    // Check result.result first (might be next msgId to poll)
+    if (resultValue && resultValue !== msgId && !resultValue.startsWith("http")) {
+      nextMsgId = resultValue;
+      console.log("[Wink] Redirecting to result msgId:", nextMsgId);
+    } else if (!msgId.startsWith("wpr_")) {
       // Prioritaskan msgId dengan prefix wpr_ (yang valid)
       if (realMsgId && realMsgId.startsWith("wpr_") && realMsgId !== msgId) {
         nextMsgId = realMsgId;
