@@ -752,20 +752,21 @@ function VideoUpscalePanel({ tasks, createTask }) {
           const signData = await signRes.json();
           if (!signData.Status) throw new Error(signData.msg || 'Failed to get credentials');
 
-          // Step 2: Upload directly to Qiniu from browser (Instan)
-          const qiniuForm = new FormData();
-          qiniuForm.append('token', signData.upload.token);
-          qiniuForm.append('key', signData.upload.key);
-          qiniuForm.append('fname', item.file.name);
-          qiniuForm.append('file', item.file);
+          // Step 2: Send file to Backend to upload to Qiniu (Bypass CORS)
+          const backendForm = new FormData();
+          backendForm.append('token', signData.upload.token);
+          backendForm.append('key', signData.upload.key);
+          backendForm.append('uploadUrl', signData.upload.url);
+          backendForm.append('filename', item.file.name);
+          backendForm.append('video', item.file); // Mengirim file video
 
-          const uploadRes = await fetch(signData.upload.url, {
+          const uploadRes = await fetch('/api/video/upload', {
             method: 'POST',
-            body: qiniuForm,
+            body: backendForm, // menggunakan multipart/form-data
           });
-          if (!uploadRes.ok) {
-             const errText = await uploadRes.text();
-             throw new Error('Upload ke Qiniu gagal: ' + errText);
+          const uploadData = await uploadRes.json();
+          if (!uploadData.Status) {
+             throw new Error('Upload ke Qiniu via Backend gagal: ' + (uploadData.msg || 'Unknown Error'));
           }
 
           // Step 4: Start processing (transcode)
