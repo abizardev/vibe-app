@@ -3,6 +3,7 @@ import multer from "multer";
 import { tiktokDownloader } from "../services/tiktok.js";
 import { editImage } from "../services/nanobanana.js";
 import { getUploadCredentials, startProcessing, pollProgress } from "../services/wink.js";
+import { downr, downrBatch } from "../services/downr.js";
 import {
   uploadImageResult,
   uploadImageResultFromUrl,
@@ -345,6 +346,73 @@ router.post("/storage/cleanup-temp", async (req, res) => {
     return res.json({ Status: true, deleted: toDelete.length });
   } catch (error) {
     return res.status(500).json({ Status: false, msg: error.message });
+  }
+});
+
+// Downr: Single URL download
+router.post("/downr/download", async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) {
+      return res.status(400).json({ Status: false, Code: 400, msg: "URL is required" });
+    }
+
+    console.log(`[Downr] Processing: ${url}`);
+    const result = await downr(url);
+    
+    return res.json(result);
+  } catch (error) {
+    console.error("[Downr Error]", error.message);
+    return res.status(500).json({ 
+      Status: false, 
+      Code: 500, 
+      Input: req.body.url || null,
+      Endpoint: null,
+      Result: null,
+      Error: error.message 
+    });
+  }
+});
+
+// Downr: Batch download
+router.post("/downr/batch", async (req, res) => {
+  try {
+    const { urls } = req.body;
+    
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({ 
+        Status: false, 
+        Code: 400, 
+        msg: "URLs array is required and must not be empty" 
+      });
+    }
+
+    if (urls.length > 20) {
+      return res.status(400).json({ 
+        Status: false, 
+        Code: 400, 
+        msg: "Maximum 20 URLs allowed per batch" 
+      });
+    }
+
+    console.log(`[Downr Batch] Processing ${urls.length} URLs`);
+    const results = await downrBatch(urls);
+    
+    return res.json({
+      Status: true,
+      Code: 200,
+      Total: urls.length,
+      Success: results.filter(r => r.Status).length,
+      Failed: results.filter(r => !r.Status).length,
+      Results: results
+    });
+  } catch (error) {
+    console.error("[Downr Batch Error]", error.message);
+    return res.status(500).json({ 
+      Status: false, 
+      Code: 500, 
+      msg: error.message 
+    });
   }
 });
 

@@ -31,10 +31,12 @@ import {
   Link,
 } from 'lucide-react';
 import './App.css';
+import { DownrPanel } from './AppDownr.jsx';
 
 const SIDEBAR_ITEMS = [
   { id: 'home', icon: LayoutGrid, label: 'Home' },
   { id: 'tiktok', icon: Download, label: 'TikTok Download' },
+  { id: 'downr', icon: Link, label: 'Media Downloader' },
   { id: 'image', icon: Wand2, label: 'AI Image Edit' },
   { id: 'video', icon: ArrowUpCircle, label: 'Video Upscale' },
 ];
@@ -98,6 +100,13 @@ function HomePanel({ onNavigate, tasks }) {
       title: 'TikTok Download',
       desc: 'Batch download banyak link TikTok sekaligus',
       color: '#ea4335',
+    },
+    {
+      id: 'downr',
+      icon: Link,
+      title: 'Media Downloader',
+      desc: 'Download media dari berbagai platform (TikTok, Instagram, YouTube, dll)',
+      color: '#fbbc04',
     },
     {
       id: 'image',
@@ -961,6 +970,7 @@ export default function App() {
   const renderPanel = () => {
     switch (activeNav) {
       case 'tiktok': return <TikTokPanel tasks={tasks} createTask={createTask} />;
+      case 'downr': return <DownrPanel tasks={tasks} createTask={createTask} />;
       case 'image': return <ImageEditPanel tasks={tasks} createTask={createTask} setTasks={setTasks} />;
       case 'video': return <VideoUpscalePanel tasks={tasks} createTask={createTask} />;
       default: return <HomePanel onNavigate={setActiveNav} tasks={tasks} />;
