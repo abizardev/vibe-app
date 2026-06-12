@@ -137,7 +137,7 @@ export async function downr(url) {
   }
 }
 
-// Batch download with rate limiting
+// Batch download without rate limiting (no delay)
 export async function downrBatch(urls) {
   const results = [];
   
@@ -145,11 +145,7 @@ export async function downrBatch(urls) {
     try {
       const result = await downr(url);
       results.push(result);
-      
-      // Rate limiting: wait 1.1s between requests
-      if (urls.indexOf(url) < urls.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1100));
-      }
+      // No delay for media downloader
     } catch (err) {
       results.push({
         Status: false,
